@@ -4,7 +4,7 @@
   Aplicatie Petshop 
   
 ## Tema aleasa:
-- Gestionarea unui Petsop
+  Gestionarea unui Petsop
 
 ## Clasele din proiect:
 
