@@ -4,7 +4,7 @@
   Aplicatie Petshop 
   
 ## Tema aleasa:
-  Gestionarea unui Petsop
+  Gestionarea unui Petshop
 
 ## Clasele din proiect:
 
@@ -13,11 +13,11 @@
 #### Clasa String
 - este un vector de char-uri alocat dinamic, echivalentul lui "string";
 #### Clasa Produs
-- este o clasa de baza pentru aplicatie
+- este o clasa de baza pentru aplicatie;
 - reprezinta tipurile de produse ce se pot vinde in petshop;
-#### Clasa Vecto_produse
-- o clasa ce retine mai multe produse intr-un vector alocat dinamic
-- are utilitate in alte doua clase importante
+#### Clasa Vector_produse
+- o clasa ce retine mai multe produse intr-un vector alocat dinamic;
+- are utilitate in alte doua clase importante;
 #### Clasa Cos_cumparaturi
 - a fost creata pentru a putea retine simultan o multime de produse si pretul total al acestora;
 - pretul se modifica in timp real, cand sunt adaugate sau sterse produse din cos;
