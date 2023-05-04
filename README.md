@@ -1,5 +1,5 @@
 # Proiect - POO
-
+(needs to be updated with all that has been done for the second deadline)
 ## Numele proiectului:
   Aplicatie Petshop 
   
