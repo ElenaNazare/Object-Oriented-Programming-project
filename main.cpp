@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <vector>
 #include <cstring>
+#include <functional>
 using namespace std;
 /*
 class Monetar
@@ -152,6 +153,7 @@ public:
         return out;
     }
 class Vector_produse;
+///EXCEPTIE CUSTOM (4)
 class Bad_delete : public exception
 {
     string mesaj;
@@ -223,21 +225,36 @@ public:
 class Interfata
 {
 public:
+    ///MET. VIRT.1 + 2
     virtual double average_pret(Vector_produse *v)=0;
     virtual bool verificare_valabilitate(Data d)=0;
 };
-
+///PRIMA IERARHIE || MODIFICATOR 1
+///INTERFATA
+///CLASA ABSTRACTA || BUNIC DIAMANT
 class Produs : public Interfata
 {
     // DE CREAT O CLASA REDUCERE
     // valoarea din reducere reprezinta de fapt un procentaj
+    string cod_articol;
+    // vector_recenzii recenzii;
+    ///PROTECTED_DATE
 protected:
     double pret,reducere; // monetar pret; eventual
     int nr_bucati_stoc;
     String descriere,tara_provenienta,nume;
-private:
-    string cod_articol;
-    // vector_recenzii recenzii;
+    ///PROTECTED_METODA
+    ///PRIMUL THROW
+    void set_cod_articol(string cod_articol)
+    {
+        char c;
+        c=cod_articol[0];
+        if(c!='#')
+            throw Bad_init("Codul de articol nu incepe corespunzator.");
+        else if(cod_articol.size()!=7)
+                throw Bad_length("Codul de articol nu este corespunzator standardului: nu are lungimea = 7 caractere (incluzand #).");
+        this -> cod_articol = cod_articol;
+    }
 public:
     Produs()
     {
@@ -264,6 +281,7 @@ public:
         this->descriere = descriere;
         this->reducere = reducere;
     };
+    ///DESTR. VIRTUAL
     virtual ~Produs()=default;
     Produs(const Produs &copie)
     {
@@ -280,19 +298,9 @@ public:
     {
         this -> nume = nume;
     }
-protected:
-    void set_cod_articol(string cod_articol)
-    {
-        char c;
-        c=cod_articol[0];
-        if(c!='#')
-            throw Bad_init("Codul de articol nu incepe corespunzator.");
-        else if(cod_articol.size()!=7)
-                throw Bad_length("Codul de articol nu este corespunzator standardului: nu are lungimea = 7 caractere (incluzand #).");
-        this -> cod_articol = cod_articol;
-    }
-public:
+    ///CLASA ABSTRACTA
     virtual string categorie_produs()=0;
+    ///MET. VIRT.3
     virtual string tip_asistenta()
     {
         return "Intrebari frecvente pe pagina magazinului";
@@ -346,11 +354,13 @@ public:
         return tara_provenienta;
     }
     ///TRATAREA ERORILOR
+    ///AL DOILEA THROW
     void schimbare_cod_articol(string str)
     {
         try{
             this->set_cod_articol(str);
         }
+        ///CATCH PRIMUL THROW
         catch(Bad_init bi){
             string aux;
             aux.push_back('#');
@@ -390,6 +400,7 @@ public:
         nume = copie.nume;
         cod_articol = copie.cod_articol;
     }
+    ///MET. VIRT.4
     virtual void afisare()
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
@@ -435,6 +446,7 @@ public:
     {
         push_back(p);
     }
+    ///DESTR. VIRTUAL
     void stergere(Produs *p)
     {
         if((*this).empty())
@@ -458,7 +470,10 @@ public:
     ostream & operator << (ostream &out, Vector_produse &vect)
     {
         for(int i=0;i<vect.size();i++)
-            vect[i]->afisare();
+        {
+             vect[i]->afisare();
+             out<<endl;
+        }
         return out;
     }
 class Cos_cumparaturi
@@ -533,6 +548,7 @@ public:
     }
 class Client
 {
+    ///VAR. STATICA
     static int nr_clienti;
     string id;
     String nume,prenume,email,adresa;
@@ -591,6 +607,7 @@ public:
         }
         else{id.push_back(48+(nr_clienti%10));id.push_back(48+((nr_clienti/10)%10));id.push_back(48+((nr_clienti/100)%10));}
     }
+    ///METODA STATICA 1
     static Client create_guest(String alias_tmp,Data data_curenta)
     {
         Cos_cumparaturi cos;
@@ -625,6 +642,7 @@ public:
     {
         cos_de_cumparaturi = cos;
     }
+    ///METODA STATICA 2
     static int get_nr_clienti()
     {
         return nr_clienti;
@@ -856,6 +874,7 @@ public:
         else out<<endl;
         return out;
     }
+///A DOUA IERARHIE || MODIFICATOR 2
 class Vector_clienti : private vector<Client>
 {
 public:
@@ -889,6 +908,7 @@ public:
             out<<vect[i]<<endl;
         return out;
     }
+///PRIMA IERARHIE || PARINTE DIAMANT 1
 class Hrana : virtual public Produs
 {
 protected:
@@ -896,11 +916,11 @@ protected:
     string compozitie;
     Data data_expirare;
 public:
-    using Produs::set_cod_articol;
     Hrana():Produs()
     {
         cantitate_grame=0;
     }
+    ///CONSTR. PARAM.
     Hrana(String n, double p, int s, string c, String t, String d, double r,int cant,string comp,Data d_exp):Produs(n,p,s,c,t,d,r)
     {
         cantitate_grame=cant;
@@ -939,10 +959,6 @@ public:
     string tip_asistenta()
     {
         return "Asistenta online disponibila. In magazine va stau la dispozitie angajatii fiecarui raion.";
-    }
-    void articol_gol()
-    {
-        set_cod_articol("");
     }
     bool verificare_valabilitate(Data d)
     {
@@ -1001,7 +1017,6 @@ class Decoratiuni: public Produs
     float lungime,latime,inaltime;
     string materiale;
 public:
-    using Produs::set_cod_articol;
     Decoratiuni():Produs()
     {
         lungime=latime=inaltime=0;
@@ -1098,6 +1113,7 @@ ostream & operator << (ostream &out, Decoratiuni &prd)
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
+///PARINTE DIAMANT 2
 class Medicament : virtual public Produs
 {
 protected:
@@ -1199,6 +1215,7 @@ public:
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
+///MOSTENIRE MULTIPLA || COPIL DIAMANT
 class Hrana_medicala: public Hrana, public Medicament
 {
 public:
@@ -1274,19 +1291,69 @@ public:
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
+
 void testare2();
+void testare_lambda();
+void testare_mostenire_diamant();
+
+///LAMBDA EXPRESIE
+void sort_produse_din_vector(Vector_produse *vect, function<bool(Produs*,Produs*)> lambda) {
+    int n = vect->size();
+    for (int i = 0; i < n-1; i++) {
+        bool swapped = false;
+        for (int j = 0; j < n-i-1; j++) {
+            if (lambda((*vect)[j+1],(*vect)[j])) {
+                swap((*vect)[j],(*vect)[j+1]);
+                swapped = true;
+            }
+        }
+        if (!swapped) {
+            // If no swaps were made, the array is already sorted
+            break;
+        }
+    }
+}
 int main()
 {
     testare2();
-    //Hrana_medicala h1;
-    //cout<<h1;
+    //testare_lambda();
+    //testare_mostenire_diamant();
     return 0;
+}
+void testare_mostenire_diamant()
+{
+    Hrana_medicala h1;
+    cout<<h1;
+}
+void testare_lambda()
+{
+    Data d1(5,12,2025),d_curenta(2,5,2023);
+    Produs *p1=new Hrana();
+    Produs *p2=new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1);
+    Produs *p3=new Decoratiuni();
+    Vector_produse *p=new Vector_produse;
+    p->adaugare(p1);
+    p->adaugare(p2);
+    p->adaugare(p3);
+    cout<<*p<<endl;
+
+    ///LAMBDA
+    p3->set_pret(4);
+    cout<<"AM UTILIZAT FUNCTIA LAMBDA"<<endl<<endl;
+    sort_produse_din_vector(p, [](Produs* a, Produs* b) {
+        return a->get_pret() > b->get_pret();
+    });
+    cout<<*p<<endl<<endl;
 }
 void testare2()
 {
     Data d1(5,12,2025),d_curenta(2,5,2023);
-    Produs *p1=new Hrana(); ///upcasting
-    p1->afisare();///polimorfism
+    Produs *p1=new Hrana(); ///UPCASTING
+    ///POLIMORFISM
+    p1->afisare();
+
+    ///CATCH AL DOILEA THROW
+    cout<<endl;
     try{
         p1->schimbare_cod_articol("#54362993");
     }
@@ -1294,27 +1361,34 @@ void testare2()
     {
         cerr<<"Incercati "<<ms.what()<<endl;
     }
-    p1->afisare();
-    try{
-        Produs *p2=new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1);///upcasting
+    cout<<endl;
+    ///
 
-        cout<<p2->verificare_valabilitate(d_curenta)<<endl;//polimorfism
-        Produs *p3=new Decoratiuni();///upcasting
+    p1->afisare();
+    ///BLOC TRY
+    try{
+        Produs *p2=new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1);///UPCASTING
+
+        ///POLIMORFISM
+        cout<<endl<<"Verificare valabilitate:\n"<<p2->verificare_valabilitate(d_curenta)<<endl<<endl;
+        Produs *p3=new Decoratiuni();///UPCASTING
         cout<<"Decoratiune: "<<endl;
         cout<<*p3;
-        cout<<"Vect_prod"<<endl;
+        cout<<endl<<"     Vectorul de produse"<<endl<<endl;
         Vector_produse *p=new Vector_produse;
         p->adaugare(p1);
-        p->adaugare(p2);///upcasting
+        p->adaugare(p2);///UPCASTING
         p->adaugare(p3);
         cout<<*p<<endl;
-        ///polimorfism
+
+        ///POLIMORFISM
         int nr_hrana=0;
         int nr_decoratiuni=0;
         for(int i=0;i<p->size();i++)
-            if((*p)[i]->categorie_produs()=="Hrana pentru animale")
+            if((*p)[i]->categorie_produs()=="Hrana pentru animale")///HERE
                 nr_hrana++;
             else {
+                ///DYNAMIC_CAST
                 Decoratiuni* tmp=dynamic_cast<Decoratiuni*>((*p)[i]);
                 if(tmp){
                     nr_decoratiuni++;
@@ -1323,11 +1397,11 @@ void testare2()
         cout<<"Nr articole de tip hrana din vector: "<<nr_hrana<<endl;
         cout<<"Nr decoratiuni: "<<nr_decoratiuni<<endl;
 
-        cout<<"PRET:"<<p2->average_pret(p)<<endl;///polimorfism
+        ///POLIMORFISM
+        cout<<"PRET:"<<p2->average_pret(p)<<endl;
 
         //TESTARE ERORI
         Hrana p5;
-        //p5.set_cod_articol("#12842");
         try{
             p->stergere(&p5);
         }
@@ -1337,6 +1411,7 @@ void testare2()
         cout<<endl<<"Testare clasa Cos_cumparaturi"<<endl;
         Cos_cumparaturi cos(*p);
         cout<<cos;
+    ///TRATARE
     }
     catch(bad_alloc bd){
         cerr<<"EROARE: Nu exista spatiu suficient disponibil."<<bd.what()<<endl;
@@ -1346,7 +1421,9 @@ void testare2()
     }
     //CLIENTI
     cout<<endl<<"Nr clienti: "<<Client::get_nr_clienti()<<endl;
+    ///TESTARE METODA 1 STATICA
     Client g=Client::create_guest("guest14",d_curenta);
     cout<<g;
     cout<<"Nr clienti: "<<Client::get_nr_clienti();
+
 }
