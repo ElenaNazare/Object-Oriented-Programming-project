@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstring>
 #include <functional>
+#include <algorithm>
 using namespace std;
 /*
 class Monetar
@@ -11,6 +12,9 @@ class Monetar
     String currency;
 };
 */
+
+
+
 class Data
 {
     int zi,luna,an;
@@ -152,8 +156,10 @@ public:
             out<<str.pointer;
         return out;
     }
-class Vector_produse;
-///EXCEPTIE CUSTOM (4)
+template <typename T>
+class Vector_diverse;
+class Produs;
+
 class Bad_delete : public exception
 {
     string mesaj;
@@ -225,26 +231,22 @@ public:
 class Interfata
 {
 public:
-    ///MET. VIRT.1 + 2
-    virtual double average_pret(Vector_produse *v)=0;
+
+    virtual double average_pret(Vector_diverse<Produs*> *v)=0;
     virtual bool verificare_valabilitate(Data d)=0;
 };
-///PRIMA IERARHIE || MODIFICATOR 1
-///INTERFATA
-///CLASA ABSTRACTA || BUNIC DIAMANT
+///
 class Produs : public Interfata
 {
     // DE CREAT O CLASA REDUCERE
     // valoarea din reducere reprezinta de fapt un procentaj
     string cod_articol;
     // vector_recenzii recenzii;
-    ///PROTECTED_DATE
+
 protected:
     double pret,reducere; // monetar pret; eventual
     int nr_bucati_stoc;
     String descriere,tara_provenienta,nume;
-    ///PROTECTED_METODA
-    ///PRIMUL THROW
     void set_cod_articol(string cod_articol)
     {
         char c;
@@ -281,7 +283,6 @@ public:
         this->descriere = descriere;
         this->reducere = reducere;
     };
-    ///DESTR. VIRTUAL
     virtual ~Produs()=default;
     Produs(const Produs &copie)
     {
@@ -298,9 +299,7 @@ public:
     {
         this -> nume = nume;
     }
-    ///CLASA ABSTRACTA
     virtual string categorie_produs()=0;
-    ///MET. VIRT.3
     virtual string tip_asistenta()
     {
         return "Intrebari frecvente pe pagina magazinului";
@@ -353,14 +352,14 @@ public:
     {
         return tara_provenienta;
     }
-    ///TRATAREA ERORILOR
-    ///AL DOILEA THROW
+    //TRATAREA ERORILOR
+    //AL DOILEA THROW
     void schimbare_cod_articol(string str)
     {
         try{
             this->set_cod_articol(str);
         }
-        ///CATCH PRIMUL THROW
+        //CATCH PRIMUL THROW
         catch(Bad_init bi){
             string aux;
             aux.push_back('#');
@@ -378,7 +377,6 @@ public:
                 throw Mesaj(" sa mai eliminati cifre.");
         }
     }
-    ///FUNCTIE BUSINESS
     void aplicare_reducere()
     {
         // Reducere este un procentaj
@@ -400,7 +398,7 @@ public:
         nume = copie.nume;
         cod_articol = copie.cod_articol;
     }
-    ///MET. VIRT.4
+
     virtual void afisare()
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
@@ -413,7 +411,7 @@ public:
     }
     //int pret_dupa_reducere(double pret,double reducere)
     friend ostream & operator << (ostream &out,const Produs &prd);
-    double average_pret(Vector_produse* q){cout<<"YAY";}
+    double average_pret(Vector_diverse<Produs*> * q){}
     bool verificare_valabilitate(Data d)=0;
 };
     ostream & operator << (ostream &out,const Produs &prd)
@@ -427,27 +425,56 @@ public:
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
-class Vector_produse : private vector<Produs*>
+
+///FUCTIE SABLON
+template <typename D> void afisare_vector(D var)
+{
+     for(int i=0;i<var->size();i++)
+        {
+             (*var)[i]->afisare();
+             cout<<endl;
+        }
+}
+///SPECIALIZARE EXPLICITA
+template <> void afisare_vector(int var)
+{
+    cout<<"Atentionare: functia apelata ar trebui folosita doar pentru vectori de date.\n";
+    cout<<var<<endl;
+}
+template <> void afisare_vector(double var)
+{
+    cout<<"Atentionare: functia apelata ar trebui folosita doar pentru vectori de date.\n";
+    cout<<var<<endl;
+}
+template <> void afisare_vector(float var)
+{
+    cout<<"Atentionare: functia apelata ar trebui folosita doar pentru vectori de date.\n";
+    cout<<var<<endl;
+}
+
+///CLASA SABLON
+template <typename T>
+class Vector_diverse : private vector<T>
 {
 public:
-    using vector<Produs*>::size;
-    using vector<Produs*>::operator[];
-    using vector<Produs*>::clear;
-    using vector<Produs*>::erase;
-    using vector<Produs*>::begin;
-    using vector<Produs*>::empty;
-    ~Vector_produse()
+    using vector<T>::size;
+    using vector<T>::operator[];
+    using vector<T>::clear;
+    using vector<T>::erase;
+    using vector<T>::begin;
+    using vector<T>::empty;
+    using vector<T>::end;
+    ~Vector_diverse()
     {
         for(int i=0;i<size();i++)
             delete (*this)[i];
-        (*this).clear();
+        //(*this).clear();
     }
-    void adaugare(Produs *p)
+    void adaugare(T p)
     {
-        push_back(p);
+        this->push_back(p);
     }
-    ///DESTR. VIRTUAL
-    void stergere(Produs *p)
+    void stergere(T p)
     {
         if((*this).empty())
             throw Bad_delete("Nu se poate sterge din vectorul gol.");
@@ -465,20 +492,20 @@ public:
     {
         return (*this).size();
     }
-    friend ostream & operator << (ostream &out, Vector_produse &vect);
-};
-    ostream & operator << (ostream &out, Vector_produse &vect)
+    /*
+    void afisare()
     {
-        for(int i=0;i<vect.size();i++)
+        for(int i=0;i<this->size();i++)
         {
-             vect[i]->afisare();
-             out<<endl;
+             (*this)[i]->afisare();
+             cout<<endl;
         }
-        return out;
     }
+    */
+};
 class Cos_cumparaturi
 {
-    Vector_produse produse_cos;
+    Vector_diverse<Produs*> produse_cos;
     double total_cos;
 public:
     ~Cos_cumparaturi()
@@ -487,11 +514,9 @@ public:
     }
     Cos_cumparaturi()
     {
-        Vector_produse nul;
         total_cos=0;
-        produse_cos=nul;
     }
-    Cos_cumparaturi(Vector_produse &v1)
+    Cos_cumparaturi(Vector_diverse<Produs*> &v1)
     {
         double suma=0;
         for(int i=0;i<v1.size();i++)
@@ -504,7 +529,7 @@ public:
         produse_cos = cos.produse_cos;
         total_cos = cos.total_cos;
     }
-    Vector_produse get_produse_cos()
+    Vector_diverse<Produs*> get_produse_cos()
     {
         return produse_cos;
     }
@@ -539,7 +564,7 @@ public:
         {
             for(int i=0;i<cos1.produse_cos.size()-1;i++)
                 out<<cos1.produse_cos[i]->get_nume()<<", ";
-            cout<<cos1.produse_cos[cos1.produse_cos.size()-1]->get_nume();
+            out<<cos1.produse_cos[cos1.produse_cos.size()-1]->get_nume();
         }
         else out<<"";
         out<<endl;
@@ -548,7 +573,6 @@ public:
     }
 class Client
 {
-    ///VAR. STATICA
     static int nr_clienti;
     string id;
     String nume,prenume,email,adresa;
@@ -607,7 +631,7 @@ public:
         }
         else{id.push_back(48+(nr_clienti%10));id.push_back(48+((nr_clienti/10)%10));id.push_back(48+((nr_clienti/100)%10));}
     }
-    ///METODA STATICA 1
+    ///DESIGN PATTERN 1 || "STATIC FACTORY METHOD"
     static Client create_guest(String alias_tmp,Data data_curenta)
     {
         Cos_cumparaturi cos;
@@ -642,7 +666,6 @@ public:
     {
         cos_de_cumparaturi = cos;
     }
-    ///METODA STATICA 2
     static int get_nr_clienti()
     {
         return nr_clienti;
@@ -694,10 +717,47 @@ public:
         return out;
     }
 int Client::nr_clienti=0;
+
+class Comanda;
+
+///DESIGN PATTERN 2 || SINGLETON
+
+class Stocare_date
+{
+    Vector_diverse<Comanda*> comenzile_magazinului;
+    Stocare_date(){}
+public:
+    void adaugare_comanda(Comanda * c)
+    {
+        comenzile_magazinului.adaugare(c);
+    }
+    void afisare()
+    {
+        afisare_vector(&comenzile_magazinului);
+    }
+    void stergere(Comanda * c)
+    {
+        /*
+        if(comenzile_magazinului.empty())
+            throw Bad_delete("Nu se poate sterge din vectorul gol.");
+        for(int i=0;i<comenzile_magazinului.size();i++)
+            if(comenzile_magazinului[i]->get_id()==c->get_id()){
+                comenzile_magazinului.erase(comenzile_magazinului.begin()+i);
+            }
+        */
+    }
+    static Stocare_date & get_instanta()
+    {
+        static Stocare_date s;
+        return s;
+    }
+};
+Stocare_date stoc = Stocare_date::get_instanta();
+
 class Comanda
 {
     Client cont_client;
-    Vector_produse produse;// cos_de_cumparaturi -> cos_de_cumparaturi ar trebui sa provina din cosul curent al clientului;
+    Vector_diverse<Produs*> produse;// cos_de_cumparaturi -> cos_de_cumparaturi ar trebui sa provina din cosul curent al clientului;
     String id_comanda,status,detalii_livrare;
     Data data_plasare_comanda;
     // DE FACUT CLASA VOUHER CU EXPIRARE ETC.
@@ -711,7 +771,7 @@ public:
         Client client0;
         String placeholder("placeholder"),status_initial("?"),id("#00000000"),vid;
         Data data_standard(1,1,2000);
-        Vector_produse vector_vid;
+        Vector_diverse<Produs*> vector_vid;
 
         cont_client=client0;
         id_comanda=id;
@@ -723,6 +783,8 @@ public:
 
         produse=vector_vid;
         pret_total=0;
+
+        stoc.adaugare_comanda(this);
     }
     // vectorul produse si pretul sunt luate din cosul curent al cumparatorului
     Comanda(Client c, String id, String s, String d, Data data, bool v, double val_v)
@@ -736,6 +798,10 @@ public:
         //
         produse = cont_client.get_cos().get_produse_cos();
         pret_total = cont_client.get_cos().get_total_cos();
+    }
+    ~Comanda()
+    {
+        stoc.stergere(this);
     }
     Comanda(const Comanda &cmd)
     {
@@ -755,7 +821,7 @@ public:
         produse = client1.get_cos().get_produse_cos();
         pret_total = client1.get_cos().get_total_cos();
     }
-    void set_produse(Vector_produse vect_prod)
+    void set_produse(Vector_diverse<Produs*> vect_prod)
     {
         //nu ar trebui folosit pe cont propriu, e setat in cont client
         produse = vect_prod;
@@ -793,7 +859,7 @@ public:
     {
         return cont_client;
     }
-    Vector_produse get_produse()
+    Vector_diverse<Produs*> get_produse()
     {
         return produse;
     }
@@ -849,6 +915,28 @@ public:
         valoare_voucher = cmd.valoare_voucher;
         pret_total = cmd.pret_total;
     }
+    void afisare()
+    {
+        cout<<"Comanda cu id-ul "<<this->id_comanda<<" a clientului "<<this->cont_client.get_nume()<<" "<<this->cont_client.get_prenume()<<":"<<endl;
+        cout<<"Produse: ";
+        if(!this->produse.empty())
+        {
+            for(int i=0;i<this->produse.size()-1;i++)
+                cout<<this->produse[i]->get_nume()<<", ";
+            cout<<this->produse[this->produse.size()-1]->get_nume();
+        }
+        else cout<<"";
+        cout<<endl;
+        cout<<"Data plasarii comenzii: "<<this->data_plasare_comanda<<endl;
+        cout<<"Statusul comenzii este: "<<this->status<<endl;
+        cout<<"Detaliile de livrare ale comenzii: "<<this->detalii_livrare<<endl;
+        cout<<"Total comanda: "<<this->pret_total<<" RON";
+        if(this->voucher==true)
+        {
+            cout<<endl<<"Voucher disponibil: reducere "<<this->valoare_voucher<<"% din totalul comenzii."<<endl;
+        }
+        else cout<<endl;
+    }
     friend ostream & operator << (ostream &out, Comanda &cmd);
 };
     ostream & operator << (ostream &out, Comanda &cmd)
@@ -874,7 +962,8 @@ public:
         else out<<endl;
         return out;
     }
-///A DOUA IERARHIE || MODIFICATOR 2
+
+///Poate fi Vector_diverse<Client*>
 class Vector_clienti : private vector<Client>
 {
 public:
@@ -908,7 +997,6 @@ public:
             out<<vect[i]<<endl;
         return out;
     }
-///PRIMA IERARHIE || PARINTE DIAMANT 1
 class Hrana : virtual public Produs
 {
 protected:
@@ -920,7 +1008,6 @@ public:
     {
         cantitate_grame=0;
     }
-    ///CONSTR. PARAM.
     Hrana(String n, double p, int s, string c, String t, String d, double r,int cant,string comp,Data d_exp):Produs(n,p,s,c,t,d,r)
     {
         cantitate_grame=cant;
@@ -970,7 +1057,7 @@ public:
                     return true;
         return false;
     }
-    double average_pret(Vector_produse *v)
+    double average_pret(Vector_diverse<Produs*> *v)
     {
         int nr_hrana=0;
         int i;
@@ -1073,7 +1160,7 @@ public:
     {
         return true;
     }
-    double average_pret(Vector_produse *v)
+    double average_pret(Vector_diverse<Produs*> *v)
     {
         int nr_dec=0;
         int i;
@@ -1113,7 +1200,7 @@ ostream & operator << (ostream &out, Decoratiuni &prd)
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
-///PARINTE DIAMANT 2
+
 class Medicament : virtual public Produs
 {
 protected:
@@ -1175,7 +1262,7 @@ public:
                     return true;
         return false;
     }
-    double average_pret(Vector_produse *v)
+    double average_pret(Vector_diverse<Produs*> *v)
     {
         int nr_hrana=0;
         int i;
@@ -1215,7 +1302,6 @@ public:
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
-///MOSTENIRE MULTIPLA || COPIL DIAMANT
 class Hrana_medicala: public Hrana, public Medicament
 {
 public:
@@ -1245,7 +1331,7 @@ public:
                     return true;
         return false;
     }
-    double average_pret(Vector_produse *v)
+    double average_pret(Vector_diverse<Produs*> *v)
     {
         int nr_hrana=0;
         int i;
@@ -1293,11 +1379,11 @@ public:
     }
 
 void testare2();
+void testare3();
 void testare_lambda();
 void testare_mostenire_diamant();
 
-///LAMBDA EXPRESIE
-void sort_produse_din_vector(Vector_produse *vect, function<bool(Produs*,Produs*)> lambda) {
+void sort_produse_din_vector(Vector_diverse<Produs*> *vect, function<bool(Produs*,Produs*)> lambda) {
     int n = vect->size();
     for (int i = 0; i < n-1; i++) {
         bool swapped = false;
@@ -1315,10 +1401,15 @@ void sort_produse_din_vector(Vector_produse *vect, function<bool(Produs*,Produs*
 }
 int main()
 {
-    testare2();
-    //testare_lambda();
+    testare3();
+    //testare2();
+    testare_lambda();
     //testare_mostenire_diamant();
     return 0;
+}
+void testare3()
+{
+    afisare_vector(1);
 }
 void testare_mostenire_diamant()
 {
@@ -1331,19 +1422,35 @@ void testare_lambda()
     Produs *p1=new Hrana();
     Produs *p2=new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1);
     Produs *p3=new Decoratiuni();
-    Vector_produse *p=new Vector_produse;
+    Vector_diverse<Produs*> *p=new Vector_diverse<Produs*>;
     p->adaugare(p1);
     p->adaugare(p2);
     p->adaugare(p3);
-    cout<<*p<<endl;
+    afisare_vector(p);   //p->afisare();
+
+    ///FUNCTIE UTILITARA2 || MIN_ELEMENT DIN <ALGORITHM>
+    auto j=min_element(p->begin(),p->end(), [](Produs* a, Produs* b) {
+        return a->get_pret() < b->get_pret();
+    });
+    cout<<"Produsul cel mai ieftin din vector:\n";
+    cout<<*(*j)<<endl;
+
 
     ///LAMBDA
     p3->set_pret(4);
     cout<<"AM UTILIZAT FUNCTIA LAMBDA"<<endl<<endl;
+
+    ///FUNCTIE UTILITARA || SORT DIN <ALGORITHM>
+    sort(p->begin(),p->end(), [](Produs* a, Produs* b) {
+        return a->get_pret() > b->get_pret();
+    });
+    /*
     sort_produse_din_vector(p, [](Produs* a, Produs* b) {
         return a->get_pret() > b->get_pret();
     });
-    cout<<*p<<endl<<endl;
+    */
+    afisare_vector(p);   //p->afisare();
+
 }
 void testare2()
 {
@@ -1355,7 +1462,7 @@ void testare2()
     ///CATCH AL DOILEA THROW
     cout<<endl;
     try{
-        p1->schimbare_cod_articol("#54362993");
+        p1->schimbare_cod_articol("543993");
     }
     catch(Mesaj ms)
     {
@@ -1375,11 +1482,12 @@ void testare2()
         cout<<"Decoratiune: "<<endl;
         cout<<*p3;
         cout<<endl<<"     Vectorul de produse"<<endl<<endl;
-        Vector_produse *p=new Vector_produse;
+        Vector_diverse<Produs*> *p=new Vector_diverse<Produs*>;
         p->adaugare(p1);
         p->adaugare(p2);///UPCASTING
         p->adaugare(p3);
-        cout<<*p<<endl;
+        afisare_vector(p);  //p->afisare();
+        cout<<endl;
 
         ///POLIMORFISM
         int nr_hrana=0;
