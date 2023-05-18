@@ -1,9 +1,12 @@
 #include <iostream>
+#include <chrono>
+#include <ctime>
 #include <iomanip>
 #include <vector>
 #include <cstring>
 #include <functional>
 #include <algorithm>
+#include <memory>
 using namespace std;
 /*
 class Monetar
@@ -13,8 +16,7 @@ class Monetar
 };
 */
 
-
-
+/// SMART POINTERS || REFERENCE_WRAPPER
 class Data
 {
     int zi,luna,an;
@@ -31,135 +33,57 @@ public:
         this -> luna = luna;
         this -> an = an;
     }
-    Data(const Data &copie)
+    Data(const reference_wrapper<Data> copie)
     {
-        zi = copie.zi;
-        luna = copie.luna;
-        an = copie.an;
+        zi = copie.get().zi;
+        luna = copie.get().luna;
+        an = copie.get().an;
     }
-    void set_zi(int zi)
+    void set_zi(const int zi)
     {
         this -> zi = zi;
     }
-    void set_luna(int luna)
+    void set_luna(const int luna)
     {
         this -> luna = luna;
     }
-    void set_an(int an)
+    void set_an(const int an)
     {
         this -> an = an;
     }
-    int get_zi()
+    int get_zi()const
     {
         return zi;
     }
-    int get_luna()
+    int get_luna()const
     {
         return luna;
     }
-    int get_an()
+    int get_an()const
     {
         return an;
     }
-    void operator = (const Data &copie)
+    void operator = (const reference_wrapper<Data> copie)
     {
-        zi = copie.zi;
-        luna = copie.luna;
-        an = copie.an;
+        zi = copie.get().zi;
+        luna = copie.get().luna;
+        an = copie.get().an;
     }
-    friend ostream & operator << (ostream &out,const Data &d1);
-};
-    ostream & operator << (ostream &out,const Data &d1)
+    void afisare()const
     {
-        out<<d1.zi;
-        out<<"/"<<d1.luna<<"/"<<d1.an;
+        cout<<this->zi<<"/"<<this->luna<<"/"<<this->an;
+    }
+    friend ostream & operator << (ostream &out,const reference_wrapper<Data> d1);
+};
+    ostream & operator << (ostream &out,const reference_wrapper<Data> d1)
+    {
+        out<<d1.get().zi;
+        out<<"/"<<d1.get().luna<<"/"<<d1.get().an;
         return out;
     }
-
-class String
-{
-    char *pointer;
-    int dimensiune;
-public:
-    // concat + adaugare caract
-    String()
-    {
-        pointer=nullptr;
-        dimensiune=0;
-    }
-    String(char a[])
-    {
-        int n=0,i;
-        for(i=0;a[i]!=NULL;i++)
-            n++;
-        dimensiune=n+1;
-        pointer = new char [dimensiune];
-
-        if(pointer==nullptr)
-            throw bad_alloc();
-
-        for(i=0;a[i]!=NULL;i++)
-            pointer[i]=a[i];
-        pointer[i]=NULL;
-    }
-    String(const String &copie)
-    {
-        int i;
-        if(copie.pointer==nullptr)
-        {
-            pointer=nullptr;
-            dimensiune = 0;
-        }
-        else
-        {
-            dimensiune = copie.dimensiune;
-            pointer = new char [dimensiune];
-            for(i=0;copie.pointer[i]!=NULL;i++)
-                pointer[i]=copie.pointer[i];
-            pointer[i]=NULL;
-        }
-    }
-    ~String()
-    {
-        if(pointer!=nullptr)
-            delete [] pointer;
-    }
-    int get_dim()
-    {
-        return dimensiune;
-    }
-    void operator=(const String &copie)
-    {
-        if(pointer!=nullptr)
-            delete [] pointer;
-        int i;
-        dimensiune = copie.dimensiune;
-        if(copie.pointer==NULL)
-        {
-            pointer=NULL;
-        }
-        else
-        {
-        pointer = new char [dimensiune];
-        for(i=0;copie.pointer[i]!=NULL;i++)
-            pointer[i]=copie.pointer[i];
-        pointer[i]=NULL;
-        }
-    }
-    friend ostream & operator << (ostream &out,const String &str);
-};
-    ostream & operator << (ostream &out,const String &str)
-    {
-        if(str.pointer==nullptr)
-            out<<"";
-        else
-            out<<str.pointer;
-        return out;
-    }
-template <typename T>
-class Vector_diverse;
+template <typename T> class Vector_diverse;
 class Produs;
-
+//EXCEPTII
 class Bad_delete : public exception
 {
     string mesaj;
@@ -168,7 +92,7 @@ public:
     {
         mesaj="";
     }
-    Bad_delete(string mesaj)
+    Bad_delete(const string &mesaj)
     {
         this->mesaj = mesaj;
     }
@@ -185,7 +109,7 @@ public:
     {
         mesaj="";
     }
-    Bad_init(string mesaj)
+    Bad_init(const string &mesaj)
     {
         this->mesaj = mesaj;
     }
@@ -202,7 +126,7 @@ public:
     {
         mesaj="";
     }
-    Bad_length(string mesaj)
+    Bad_length(const string &mesaj)
     {
         this->mesaj = mesaj;
     }
@@ -219,7 +143,7 @@ public:
     {
         mesaj="";
     }
-    Mesaj(string mesaj)
+    Mesaj(const string &mesaj)
     {
         this->mesaj = mesaj;
     }
@@ -232,22 +156,20 @@ class Interfata
 {
 public:
 
-    virtual double average_pret(Vector_diverse<Produs*> *v)=0;
-    virtual bool verificare_valabilitate(Data d)=0;
+    virtual double average_pret(const Vector_diverse<shared_ptr<Produs>> *v)const=0 ;
+    virtual bool verificare_valabilitate(const Data d)const=0;
 };
 ///
 class Produs : public Interfata
 {
-    // DE CREAT O CLASA REDUCERE
-    // valoarea din reducere reprezinta de fapt un procentaj
-    string cod_articol;
+    // idee: clasa reducere; valoarea din reducere reprezinta de fapt un procentaj
     // vector_recenzii recenzii;
-
+    string cod_articol;
 protected:
     double pret,reducere; // monetar pret; eventual
     int nr_bucati_stoc;
-    String descriere,tara_provenienta,nume;
-    void set_cod_articol(string cod_articol)
+    string descriere,tara_provenienta,nume;
+    void set_cod_articol(const string &cod_articol)
     {
         char c;
         c=cod_articol[0];
@@ -260,22 +182,22 @@ protected:
 public:
     Produs()
     {
-        String placeholder("placeholder"),vid;
+        string placeholder("placeholder");
         string cod_articol_default("#000000");
         reducere=0;
         pret=0;
-        descriere=placeholder;
         nr_bucati_stoc=0;
+        descriere=placeholder;
         tara_provenienta=placeholder;
         nume=placeholder;
         cod_articol=cod_articol_default;
     }
-    Produs(String nume, double pret, int bucati_stoc, string cod_articol, String tara_provenienta, String descriere, double reducere)
+    Produs(string nume, double pret, int bucati_stoc, string cod_articol, string tara_provenienta, string descriere, double reducere)
         //nume(n),pret(p),nr_bucati_stoc(s),cod_articol(c),tara_provenienta(t),descriere(d),reducere(r)
     {
         this->nume = nume;
         this->pret = pret;
-        nr_bucati_stoc=bucati_stoc;
+        nr_bucati_stoc = bucati_stoc;
         if(cod_articol.size()!=7)
             throw Bad_length("Codul de articol nu este corespunzator standardului: nu are destule caractere.");
         this->cod_articol = cod_articol;
@@ -284,77 +206,66 @@ public:
         this->reducere = reducere;
     };
     virtual ~Produs()=default;
-    Produs(const Produs &copie)
-    {
-        reducere = copie.reducere;
-        pret = copie.pret;
-        descriere = copie.descriere;
-        nr_bucati_stoc = copie.nr_bucati_stoc;
-        tara_provenienta = copie.tara_provenienta;
-        nume = copie.nume;
-        cod_articol = copie.cod_articol;
-    }
-    //am sters setterul pt cod articol
-    void set_nume(String nume)
+    void set_nume(const string &nume)
     {
         this -> nume = nume;
     }
-    virtual string categorie_produs()=0;
-    virtual string tip_asistenta()
+    virtual string categorie_produs()const=0;
+    virtual string tip_asistenta()const
     {
         return "Intrebari frecvente pe pagina magazinului";
     }
-    void set_tara(String tara)
+    void set_tara(const string &tara)
     {
-        tara_provenienta = tara;
+        this -> tara_provenienta = tara;
     }
-    void set_descriere(String descriere)
+    void set_descriere(const string &descriere)
     {
         this -> descriere = descriere;
     }
-    void set_stoc(int nr)
+    void set_stoc(const int nr)
     {
-        nr_bucati_stoc = nr;
+        this -> nr_bucati_stoc = nr;
     }
-    void set_pret(double pret)
+    void set_pret(const double pret)
     {
         this -> pret = pret;
     }
-    void set_reducere(double reducere)
+    void set_reducere(const double reducere)
     {
         this -> reducere = reducere;
     }
-    virtual double get_pret()// GET PRET IN FUNCTIE DE REDUCERE< DE SETAT UN PRET DE BAZA
+    virtual double get_pret()const// GET PRET IN FUNCTIE DE REDUCERE< DE SETAT UN PRET DE BAZA
     {
         return pret;
     }
-    double get_reducere()
+    double get_reducere()const
     {
         return reducere;
     }
-    int get_stoc()
+    int get_stoc()const
     {
         return nr_bucati_stoc;
     }
-    String get_nume()
+    string get_nume()const
     {
         return nume;
     }
-    string get_cod_articol()
+    string get_cod_articol()const
     {
         return cod_articol;
     }
-    String get_descriere()
+    string get_descriere()const
     {
         return descriere;
     }
-    String get_tara()
+    string get_tara()const
     {
         return tara_provenienta;
     }
     //TRATAREA ERORILOR
     //AL DOILEA THROW
-    void schimbare_cod_articol(string str)
+    void schimbare_cod_articol(const string str)
     {
         try{
             this->set_cod_articol(str);
@@ -388,18 +299,7 @@ public:
     {
         pret=(100*pret)/reducere;
     }
-    void operator=(const Produs &copie)
-    {
-        reducere = copie.reducere;
-        pret = copie.pret;
-        descriere = copie.descriere;
-        nr_bucati_stoc = copie.nr_bucati_stoc;
-        tara_provenienta = copie.tara_provenienta;
-        nume = copie.nume;
-        cod_articol = copie.cod_articol;
-    }
-
-    virtual void afisare()
+    virtual void afisare()const
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
         cout<<"Pretul produsului: "<<pret<<" RON"<<endl;
@@ -410,9 +310,9 @@ public:
         cout<<"Reducerea valabila pentru acest produs este "<<reducere<<"%"<<endl;
     }
     //int pret_dupa_reducere(double pret,double reducere)
+    double average_pret(const Vector_diverse<shared_ptr<Produs>> * q)const{}
+    bool verificare_valabilitate(const Data d)const=0;
     friend ostream & operator << (ostream &out,const Produs &prd);
-    double average_pret(Vector_diverse<Produs*> * q){}
-    bool verificare_valabilitate(Data d)=0;
 };
     ostream & operator << (ostream &out,const Produs &prd)
     {
@@ -452,6 +352,21 @@ template <> void afisare_vector(float var)
     cout<<var<<endl;
 }
 
+class Client;
+///FUNCTIE SABLON
+template <typename S,typename T> void stergere_din_vector(S vect,T elem)
+{
+    if((*vect).empty())
+                throw Bad_delete("Nu se poate sterge din vectorul gol.");
+            bool gasit=false;
+            for(int i=0;i<vect->size();i++)
+                if((*vect)[i]->get_cod_articol()==elem->get_cod_articol()){
+                    (*vect).erase((*vect).begin()+i);
+                    gasit=true;
+                }
+            if(!gasit)
+                throw Bad_delete("Nu se poate sterge un element ce nu se afla in vector.");
+}
 ///CLASA SABLON
 template <typename T>
 class Vector_diverse : private vector<T>
@@ -464,33 +379,28 @@ public:
     using vector<T>::begin;
     using vector<T>::empty;
     using vector<T>::end;
-    ~Vector_diverse()
-    {
-        for(int i=0;i<size();i++)
-            delete (*this)[i];
-        //(*this).clear();
-    }
+
     void adaugare(T p)
     {
         this->push_back(p);
     }
     void stergere(T p)
     {
-        if((*this).empty())
-            throw Bad_delete("Nu se poate sterge din vectorul gol.");
-        bool gasit=false;
-        for(int i=0;i<size();i++)
-            if((*this)[i]->get_cod_articol()==p->get_cod_articol()){
-                (*this).erase((*this).begin()+i);
-                gasit=true;
-            }
-        if(!gasit)
-            throw Bad_delete("Nu se poate sterge un element ce nu se afla in vector.");
-    }
-    //nu cred ca folosesc, dar nu sterg acum:
-    int dimensiune()
-    {
-        return (*this).size();
+        stergere_din_vector(this,p);
+        /*
+        if (is_base_of<shared_ptr<Produs>, T>::value) {
+            if((*this).empty())
+                throw Bad_delete("Nu se poate sterge din vectorul gol.");
+            bool gasit=false;
+            for(int i=0;i<size();i++)
+                if((*this)[i]->get_cod_articol()==p->get_cod_articol()){
+                    (*this).erase((*this).begin()+i);
+                    gasit=true;
+                }
+            if(!gasit)
+                throw Bad_delete("Nu se poate sterge un element ce nu se afla in vector.");
+        }
+        */
     }
     /*
     void afisare()
@@ -505,18 +415,18 @@ public:
 };
 class Cos_cumparaturi
 {
-    Vector_diverse<Produs*> produse_cos;
+    Vector_diverse<shared_ptr<Produs>> produse_cos;
     double total_cos;
 public:
     ~Cos_cumparaturi()
     {
-        //produse_cos.clear();
+        produse_cos.clear();
     }
     Cos_cumparaturi()
     {
         total_cos=0;
     }
-    Cos_cumparaturi(Vector_diverse<Produs*> &v1)
+    Cos_cumparaturi(Vector_diverse<shared_ptr<Produs>> &v1)
     {
         double suma=0;
         for(int i=0;i<v1.size();i++)
@@ -524,23 +434,21 @@ public:
         total_cos=suma;
         produse_cos=v1;
     }
-    Cos_cumparaturi(const Cos_cumparaturi &cos)
-    {
-        produse_cos = cos.produse_cos;
-        total_cos = cos.total_cos;
-    }
-    Vector_diverse<Produs*> get_produse_cos()
+    Vector_diverse<shared_ptr<Produs>> get_produse_cos()const
     {
         return produse_cos;
     }
-    double get_total_cos()
+    double get_total_cos()const
     {
         return total_cos;
     }
+    ///sa primesc un shared pointer ca parametru
     void adaugare_produs_cos(Produs &prd)
     {
         total_cos=total_cos+prd.get_pret();
-        produse_cos.adaugare(&prd);
+        //modificare aici ca sa pot folosi shared_ptr
+        shared_ptr<Produs> ptr_temp = shared_ptr<Produs>(&prd);
+        produse_cos.adaugare(ptr_temp);
     }
     void stergere_produs_cos(int poz)//pozitia produsului in vectorul produse_cos
     {
@@ -548,14 +456,9 @@ public:
         produse_cos.erase(produse_cos.begin()+poz);
         //(*this).erase((*this).begin()+i)
     }
-    void operator = (const Cos_cumparaturi &cos)
-    {
-        produse_cos = cos.produse_cos;
-        total_cos = cos.total_cos;
-    }
-    friend ostream & operator << (ostream &out, Cos_cumparaturi &cos1);
+    friend ostream & operator << (ostream &out,const Cos_cumparaturi &cos1);
 };
-    ostream & operator << (ostream &out, Cos_cumparaturi &cos1)
+    ostream & operator << (ostream &out,const Cos_cumparaturi &cos1)
     {
         out<<"Cos:"<<endl;
         out<<"Numarul de produse din cos este: "<<cos1.produse_cos.size()<<endl;
@@ -574,22 +477,19 @@ public:
 class Client
 {
     static int nr_clienti;
-    string id;
-    String nume,prenume,email,adresa;
+    string id,nume,prenume,email,adresa;
     Data data_inregistrare_cont;
     double balanta;
     //clasa conversie balanta
-    //ISTORIC COMENZI
+    //istoric comenzi
     Cos_cumparaturi cos_de_cumparaturi;
 public:
     Client()
     {
-        String def("guest"),vid;
+        string def("guest");
         Cos_cumparaturi cos_gol;
         nume=def;
-        prenume=def;
-        email=vid;
-        adresa=vid;
+        prenume="";
         Data d_vid;
         data_inregistrare_cont=d_vid;
         balanta=0;
@@ -608,7 +508,7 @@ public:
         }
         else{id.push_back(48+(nr_clienti%10));id.push_back(48+((nr_clienti/10)%10));id.push_back(48+((nr_clienti/100)%10));}
     }
-    Client(String n, String p, String e, String a, Data d, double b,Cos_cumparaturi cos)
+    Client(string n, string p, string e, string a, Data d, double b,Cos_cumparaturi cos)
     {
         nume=n;
         prenume=p;
@@ -632,25 +532,25 @@ public:
         else{id.push_back(48+(nr_clienti%10));id.push_back(48+((nr_clienti/10)%10));id.push_back(48+((nr_clienti/100)%10));}
     }
     ///DESIGN PATTERN 1 || "STATIC FACTORY METHOD"
-    static Client create_guest(String alias_tmp,Data data_curenta)
+    static Client create_guest(string alias_tmp,Data data_curenta)
     {
         Cos_cumparaturi cos;
         Client g(alias_tmp,"","","",data_curenta,0,cos);
         return g;
     }
-    void set_nume(String nume)
+    void set_nume(const string &nume)
     {
         this -> nume = nume;
     }
-    void set_prenume(String prenume)
+    void set_prenume(const string &prenume)
     {
         this -> prenume = prenume;
     }
-    void set_email(String email)
+    void set_email(const string &email)
     {
         this -> email = email;
     }
-    void set_adresa(String adresa)
+    void set_adresa(const string &adresa)
     {
         this -> adresa = adresa;
     }
@@ -670,53 +570,71 @@ public:
     {
         return nr_clienti;
     }
-    string get_id()
+    string get_id()const
     {
         return id;
     }
-    String get_nume()
+    string get_nume()const
     {
         return nume;
     }
-    String get_prenume()
+    string get_prenume()const
     {
         return prenume;
     }
-    String get_email()
+    string get_email()const
     {
         return email;
     }
-    String get_adresa()
+    string get_adresa()const
     {
         return adresa;
     }
-    Data get_data_inr_cont()
+    Data get_data_inr_cont()const
     {
         return data_inregistrare_cont;
     }
-    Cos_cumparaturi get_cos()
+    Cos_cumparaturi get_cos()const
     {
         return cos_de_cumparaturi;
     }
-    double get_balanta()
+    double get_balanta()const
     {
         return balanta;
     }
     // clasa comanda sa poata schimba balanta unui cont
-    friend ostream & operator << (ostream &out, Client &cl);
+    friend ostream & operator << (ostream &out,const Client &cl);
 };
-    ostream & operator << (ostream &out, Client &cl)
+    ostream & operator << (ostream &out,const Client &cl)
     {
         out<<"Nume: "<<cl.nume<<" "<<endl<<"Prenume: "<<cl.prenume<<endl;
         out<<"Id: "<<cl.id<<endl;
         out<<"Email: "<<cl.email<<endl;
         out<<"Adresa: "<<cl.adresa<<endl;
-        out<<"Data inregistrarii contului: "<<cl.data_inregistrare_cont<<endl;
+        out<<"Data inregistrarii contului: ";
+        cl.data_inregistrare_cont.afisare();
+        cout<<endl;
         out<<"Balanta contului: "<<cl.balanta<<" RON"<<endl;
+        ///HELP3 - de ce nu mai afiseaza
         out<<"Afisarea cosului de cumparaturi al clientului: "<<cl.cos_de_cumparaturi;
         return out;
     }
 int Client::nr_clienti=0;
+///SPECIALIZARE EXPLICITA
+template <typename S> void stergere_din_vector(S vect,Client elem)
+{
+    if((*vect).empty())
+            throw Bad_delete("Nu se poate sterge din vectorul gol.");
+        bool gasit=false;
+        for(int i=0;i<vect->size();i++)
+            if((*vect)[i].get_id()==elem.get_id()){
+                    (*vect).erase((*vect).begin()+i);
+                    gasit=true;
+            }
+        if(!gasit)
+            throw Bad_delete("Nu se poate sterge un element ce nu se afla in vector.");
+}
+
 
 class Comanda;
 
@@ -726,41 +644,39 @@ class Stocare_date
 {
     Vector_diverse<Comanda*> comenzile_magazinului;
     Stocare_date(){}
+    //privat constructorul de copiere
+    Stocare_date(Stocare_date &s)
+    {
+        comenzile_magazinului = s.comenzile_magazinului;
+    }
+    void operator=(const Stocare_date & s)
+    {
+        comenzile_magazinului = s.comenzile_magazinului;
+    }
 public:
     void adaugare_comanda(Comanda * c)
     {
         comenzile_magazinului.adaugare(c);
     }
-    void afisare()
+    void afisare()const
     {
         afisare_vector(&comenzile_magazinului);
     }
-    void stergere(Comanda * c)
-    {
-        /*
-        if(comenzile_magazinului.empty())
-            throw Bad_delete("Nu se poate sterge din vectorul gol.");
-        for(int i=0;i<comenzile_magazinului.size();i++)
-            if(comenzile_magazinului[i]->get_id()==c->get_id()){
-                comenzile_magazinului.erase(comenzile_magazinului.begin()+i);
-            }
-        */
-    }
+    void stergere_din_vectorul_comenzi(Comanda *c);
     static Stocare_date & get_instanta()
     {
         static Stocare_date s;
         return s;
     }
 };
-Stocare_date stoc = Stocare_date::get_instanta();
+Stocare_date &stoc = Stocare_date::get_instanta();
 
 class Comanda
 {
     Client cont_client;
-    Vector_diverse<Produs*> produse;// cos_de_cumparaturi -> cos_de_cumparaturi ar trebui sa provina din cosul curent al clientului;
-    String id_comanda,status,detalii_livrare;
+    Vector_diverse<shared_ptr<Produs>> produse;// cos_de_cumparaturi -> cos_de_cumparaturi ar trebui sa provina din cosul curent al clientului;
+    string id_comanda,status,detalii_livrare;
     Data data_plasare_comanda;
-    // DE FACUT CLASA VOUHER CU EXPIRARE ETC.
     bool voucher;
     double valoare_voucher;//procentaj
     double pret_total;
@@ -769,15 +685,14 @@ public:
     Comanda()
     {
         Client client0;
-        String placeholder("placeholder"),status_initial("?"),id("#00000000"),vid;
+        string placeholder("placeholder"),status_initial("?"),id("#00000000");
         Data data_standard(1,1,2000);
-        Vector_diverse<Produs*> vector_vid;
+        Vector_diverse<shared_ptr<Produs>> vector_vid;
 
         cont_client=client0;
         id_comanda=id;
         status=status_initial;
         voucher=false;
-        detalii_livrare=vid;
         data_plasare_comanda=data_standard;
         valoare_voucher=0;
 
@@ -787,7 +702,7 @@ public:
         stoc.adaugare_comanda(this);
     }
     // vectorul produse si pretul sunt luate din cosul curent al cumparatorului
-    Comanda(Client c, String id, String s, String d, Data data, bool v, double val_v)
+    Comanda(Client c, string id, string s, string d, Data data, bool v, double val_v)
     {
         cont_client = c;
         id_comanda = id;
@@ -798,47 +713,39 @@ public:
         //
         produse = cont_client.get_cos().get_produse_cos();
         pret_total = cont_client.get_cos().get_total_cos();
+
+        stoc.adaugare_comanda(this);
     }
+    Comanda(Comanda& comanda)=delete;
+    void operator=(const Comanda& comanda)=delete;
     ~Comanda()
     {
-        stoc.stergere(this);
+        stoc.stergere_din_vectorul_comenzi(this);
     }
-    Comanda(const Comanda &cmd)
-    {
-        cont_client = cmd.cont_client;
-        produse = cmd.produse;
-        id_comanda = cmd.id_comanda;
-        status = cmd.status;
-        detalii_livrare = cmd.detalii_livrare;
-        data_plasare_comanda = cmd.data_plasare_comanda;
-        voucher = cmd.voucher;
-        valoare_voucher = cmd.valoare_voucher;
-        pret_total = cmd.pret_total;
-    }
-    void set_client(Client client1)
+    void set_client(const Client client1)
     {
         cont_client = client1;
         produse = client1.get_cos().get_produse_cos();
         pret_total = client1.get_cos().get_total_cos();
     }
-    void set_produse(Vector_diverse<Produs*> vect_prod)
+    void set_produse(const Vector_diverse<shared_ptr<Produs>> vect_prod)
     {
         //nu ar trebui folosit pe cont propriu, e setat in cont client
         produse = vect_prod;
     }
-    void set_id_comanda(String id)
+    void set_id_comanda(const string &id)
     {
         id_comanda = id;
     }
-    void set_status(String status)
+    void set_status(const string &status)
     {
         this -> status = status;
     }
-    void set_detalii_livrare(String detalii_livrare)
+    void set_detalii_livrare(const string& detalii_livrare)
     {
         this -> detalii_livrare = detalii_livrare;
     }
-    void set_data_plasare_comanda(Data data)
+    void set_data_plasare_comanda(const Data data)
     {
         data_plasare_comanda = data;
     }
@@ -855,39 +762,39 @@ public:
         //nu ar trebui folosit pe cont propriu, e setat in cont client
         this -> pret_total = pret_total;
     }
-    Client get_client()
+    Client get_client()const
     {
         return cont_client;
     }
-    Vector_diverse<Produs*> get_produse()
+    Vector_diverse<shared_ptr<Produs>> get_produse()const
     {
         return produse;
     }
-    String get_id_comanda()
+    string get_id_comanda()const
     {
         return id_comanda;
     }
-    String get_status()
+    string get_status()const
     {
         return status;
     }
-    String get_detalii_livrare()
+    string get_detalii_livrare()const
     {
         return detalii_livrare;
     }
-    Data get_data_plasare_comanda()
+    Data get_data_plasare_comanda()const
     {
         return data_plasare_comanda;
     }
-    bool get_voucher()
+    bool get_voucher()const
     {
         return voucher;
     }
-    double get_valoare_voucher()
+    double get_valoare_voucher()const
     {
         return valoare_voucher;
     }
-    double get_pret_total()
+    double get_pret_total()const
     {
         return pret_total;
     }
@@ -903,19 +810,7 @@ public:
         }
         else cout<<"Nu exista niciun voucher disponibil."<<endl;
     }
-    void operator = (const Comanda &cmd)
-    {
-        cont_client = cmd.cont_client;
-        produse = cmd.produse;
-        id_comanda = cmd.id_comanda;
-        status = cmd.status;
-        detalii_livrare = cmd.detalii_livrare;
-        data_plasare_comanda = cmd.data_plasare_comanda;
-        voucher = cmd.voucher;
-        valoare_voucher = cmd.valoare_voucher;
-        pret_total = cmd.pret_total;
-    }
-    void afisare()
+    void afisare()const
     {
         cout<<"Comanda cu id-ul "<<this->id_comanda<<" a clientului "<<this->cont_client.get_nume()<<" "<<this->cont_client.get_prenume()<<":"<<endl;
         cout<<"Produse: ";
@@ -927,7 +822,9 @@ public:
         }
         else cout<<"";
         cout<<endl;
-        cout<<"Data plasarii comenzii: "<<this->data_plasare_comanda<<endl;
+        cout<<"Data plasarii comenzii: ";
+        this->data_plasare_comanda.afisare();
+        cout<<endl;
         cout<<"Statusul comenzii este: "<<this->status<<endl;
         cout<<"Detaliile de livrare ale comenzii: "<<this->detalii_livrare<<endl;
         cout<<"Total comanda: "<<this->pret_total<<" RON";
@@ -937,9 +834,9 @@ public:
         }
         else cout<<endl;
     }
-    friend ostream & operator << (ostream &out, Comanda &cmd);
+    friend ostream & operator << (ostream &out,const Comanda &cmd);
 };
-    ostream & operator << (ostream &out, Comanda &cmd)
+    ostream & operator << (ostream &out,const Comanda &cmd)
     {
         out<<"Comanda cu id-ul "<<cmd.id_comanda<<" a clientului "<<cmd.cont_client.get_nume()<<" "<<cmd.cont_client.get_prenume()<<":"<<endl;
         out<<"Produse: ";
@@ -951,7 +848,9 @@ public:
         }
         else out<<"";
         out<<endl;
-        out<<"Data plasarii comenzii: "<<cmd.data_plasare_comanda<<endl;
+        out<<"Data plasarii comenzii: ";
+        cmd.data_plasare_comanda.afisare();
+        out<<endl;
         out<<"Statusul comenzii este: "<<cmd.status<<endl;
         out<<"Detaliile de livrare ale comenzii: "<<cmd.detalii_livrare<<endl;
         out<<"Total comanda: "<<cmd.pret_total<<" RON";
@@ -961,6 +860,18 @@ public:
         }
         else out<<endl;
         return out;
+    }
+
+    void Stocare_date:: stergere_din_vectorul_comenzi(Comanda *c)
+    {
+        if(comenzile_magazinului.empty())
+            throw Bad_delete("Nu se poate sterge din vectorul gol.");
+        bool gasit=false;
+        for(int i=0;i<comenzile_magazinului.size();i++)
+            if(comenzile_magazinului[i]->get_id_comanda()==c->get_id_comanda()){
+                    comenzile_magazinului.erase(comenzile_magazinului.begin()+i);
+                    gasit=true;
+            }
     }
 
 ///Poate fi Vector_diverse<Client*>
@@ -985,13 +896,13 @@ public:
         if(!gasit)
             throw Bad_delete("Nu se poate sterge un element ce nu se afla in vector.");
     }
-    int dimensiune()
+    int dimensiune()const
     {
         return (*this).size();
     }
-    friend ostream & operator << (ostream &out, Vector_clienti &vect);
+    friend ostream & operator << (ostream &out,const Vector_clienti &vect);
 };
-    ostream & operator << (ostream &out, Vector_clienti &vect)
+    ostream & operator << (ostream &out,const Vector_clienti &vect)
     {
         for(int i=0;i<vect.size();i++)
             out<<vect[i]<<endl;
@@ -1008,7 +919,7 @@ public:
     {
         cantitate_grame=0;
     }
-    Hrana(String n, double p, int s, string c, String t, String d, double r,int cant,string comp,Data d_exp):Produs(n,p,s,c,t,d,r)
+    Hrana(string n, double p, int s, string c, string t, string d, double r,int cant,string comp,Data d_exp):Produs(n,p,s,c,t,d,r)
     {
         cantitate_grame=cant;
         compozitie=comp;
@@ -1019,35 +930,35 @@ public:
     {
         this -> cantitate_grame = cantitate_grame;
     }
-    void set_compozitie(string compozitie)
+    void set_compozitie(const string &compozitie)
     {
         this->compozitie = compozitie;
     }
-    void set_data_expirare(Data data_expirare)
+    void set_data_expirare(const Data data_expirare)
     {
         this->data_expirare = data_expirare;
     }
-    Data get_data_expirare()
+    Data get_data_expirare()const
     {
         return data_expirare;
     }
-    string get_compozitie()
+    string get_compozitie()const
     {
         return compozitie;
     }
-    int get_cantitate()
+    int get_cantitate()const
     {
         return cantitate_grame;
     }
-    string categorie_produs()
+    string categorie_produs()const
     {
         return "Hrana pentru animale";
     }
-    string tip_asistenta()
+    string tip_asistenta()const
     {
         return "Asistenta online disponibila. In magazine va stau la dispozitie angajatii fiecarui raion.";
     }
-    bool verificare_valabilitate(Data d)
+    bool verificare_valabilitate(const Data d)const
     {
         if(data_expirare.get_an()>d.get_an())
             return true;
@@ -1057,7 +968,7 @@ public:
                     return true;
         return false;
     }
-    double average_pret(Vector_diverse<Produs*> *v)
+    double average_pret(const Vector_diverse<shared_ptr<Produs>> *v)const
     {
         int nr_hrana=0;
         int i;
@@ -1070,7 +981,7 @@ public:
         avg=suma/nr_hrana;
         return avg;
     }
-    void afisare()
+    void afisare()const
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
         cout<<"Pretul produsului: "<<pret<<" RON"<<endl;
@@ -1079,13 +990,15 @@ public:
         cout<<"Descrierea produsului:"<<endl<<descriere<<endl;
         cout<<"Cantitatea in grame a produsului: "<<cantitate_grame<<endl;
         cout<<"Compozitie: "<<compozitie<<endl;
-        cout<<"Data de expirare a produsului: "<<data_expirare<<endl;
+        cout<<"Data de expirare a produsului: ";
+        data_expirare.afisare();
+        cout<<endl;
         cout<<"Tara de provenienta a produsului este "<<tara_provenienta<<endl;
         cout<<"Reducerea valabila pentru acest produs este "<<reducere<<"%"<<endl;
     }
-    friend ostream & operator << (ostream &out, Hrana &prd);
+    friend ostream & operator << (ostream &out,const Hrana &prd);
 };
-    ostream & operator << (ostream &out, Hrana &prd)
+    ostream & operator << (ostream &out,const Hrana &prd)
     {
         out<<"Fisa produsului \""<<prd.nume<<"\""<<endl;
         out<<"Pretul produsului: "<<prd.pret<<" RON"<<endl;
@@ -1094,7 +1007,9 @@ public:
         out<<"Descrierea produsului:"<<endl<<prd.descriere<<endl;
         out<<"Cantitatea in grame a produsului: "<<prd.cantitate_grame<<endl;
         out<<"Compozitie: "<<prd.compozitie<<endl;
-        out<<"Data de expirare a produsului: "<<prd.data_expirare<<endl;
+        out<<"Data de expirare a produsului: ";
+        prd.data_expirare.afisare();
+        out<<endl;
         out<<"Tara de provenienta a produsului este "<<prd.tara_provenienta<<endl;
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
@@ -1108,13 +1023,14 @@ public:
     {
         lungime=latime=inaltime=0;
     }
-    Decoratiuni(String n, double p, int s, string c, String t, String d, double r,float lungime,float latime,float inaltime,string materiale):Produs(n,p,s,c,t,d,r)
+    Decoratiuni(string n, double p, int s, string c, string t, string d, double r,float lungime,float latime,float inaltime,string materiale):Produs(n,p,s,c,t,d,r)
     {
         this->lungime=lungime;
         this->inaltime=inaltime;
         this->latime=latime;
         this->materiale=materiale;
     }
+    ///AICI HELP2
     ~Decoratiuni()=default;
     void set_lungime(float lungime)
     {
@@ -1128,39 +1044,39 @@ public:
     {
         this->inaltime = inaltime;
     }
-    void set_materiale(string materiale)
+    void set_materiale(const string &materiale)
     {
         this->materiale = materiale;
     }
-    float get_lungime()
+    float get_lungime()const
     {
         return lungime;
     }
-    float get_latime()
+    float get_latime()const
     {
         return latime;
     }
-    float get_inaltime()
+    float get_inaltime() const
     {
         return inaltime;
     }
-    string get_materiale()
+    string get_materiale()const
     {
         return materiale;
     }
-    string categorie_produs()
+    string categorie_produs()const
     {
         return "Diverse decoratiuni";
     }
-    string tip_asistenta()
+    string tip_asistenta()const
     {
         return "Asistenta online/in magazine. Anumite decoratiuni beneficiaza de serviciu de montare.";
     }
-    bool verificare_valabilitate(Data d)
+    bool verificare_valabilitate(const Data d)const
     {
         return true;
     }
-    double average_pret(Vector_diverse<Produs*> *v)
+    double average_pret(const Vector_diverse<shared_ptr<Produs>> *v)const
     {
         int nr_dec=0;
         int i;
@@ -1173,7 +1089,7 @@ public:
         avg=suma/nr_dec;
         return avg;
     }
-    void afisare()
+    void afisare()const
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
         cout<<"Pretul produsului: "<<pret<<" RON"<<endl;
@@ -1185,9 +1101,9 @@ public:
         cout<<"Tara de provenienta a produsului este "<<tara_provenienta<<endl;
         cout<<"Reducerea valabila pentru acest produs este "<<reducere<<"%"<<endl;
     }
-    friend ostream & operator << (ostream &out, Decoratiuni &prd);
+    friend ostream & operator << (ostream &out,const Decoratiuni &prd);
 };
-ostream & operator << (ostream &out, Decoratiuni &prd)
+ostream & operator << (ostream &out,const Decoratiuni &prd)
     {
         out<<"Fisa produsului \""<<prd.nume<<"\""<<endl;
         out<<"Pretul produsului: "<<prd.pret<<" RON"<<endl;
@@ -1212,7 +1128,7 @@ public:
     {
         diagnostic="placebo";
     }
-    Medicament(String n, double p, int s, string c, String t, String d, double r,string diagnostic,
+    Medicament(string n, double p, int s, string c, string t, string d, double r,string diagnostic,
                Data inceput_tratament,Data sfarsit_tratament):Produs(n,p,s,c,t,d,r)
     {
         this->diagnostic = diagnostic;
@@ -1220,7 +1136,7 @@ public:
         this->sfarsit_tratament = sfarsit_tratament;
     }
     ~Medicament()=default;
-    void set_diagnostic(string diagnostic)
+    void set_diagnostic(const string &diagnostic)
     {
         this->diagnostic = diagnostic;
     }
@@ -1232,27 +1148,27 @@ public:
     {
         this->sfarsit_tratament = sfarsit_tratament;
     }
-    string get_diagnostic()
+    string get_diagnostic()const
     {
         return diagnostic;
     }
-    Data get_data_inceput_tratament()
+    Data get_data_inceput_tratament()const
     {
         return inceput_tratament;
     }
-    Data get_data_sfarsit_tratament()
+    Data get_data_sfarsit_tratament()const
     {
         return sfarsit_tratament;
     }
-    string categorie_produs()
+    string categorie_produs()const
     {
         return "Medicament";
     }
-    string tip_asistenta()
+    string tip_asistenta()const
     {
         return "In magazine va stau la medici veterinari in sectiunea specifica.";
     }
-    bool verificare_valabilitate(Data d)
+    bool verificare_valabilitate(const Data d)const
     {
         if(sfarsit_tratament.get_an()>d.get_an())
             return true;
@@ -1262,7 +1178,7 @@ public:
                     return true;
         return false;
     }
-    double average_pret(Vector_diverse<Produs*> *v)
+    double average_pret(const Vector_diverse<shared_ptr<Produs>> *v)const
     {
         int nr_hrana=0;
         int i;
@@ -1275,7 +1191,7 @@ public:
         avg=suma/nr_hrana;
         return avg;
     }
-    void afisare()
+    void afisare()const
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
         cout<<"Pretul produsului: "<<pret<<" RON"<<endl;
@@ -1283,13 +1199,19 @@ public:
         cout<<"Numarul de bucati aflate in stoc: "<<nr_bucati_stoc<<endl;
         cout<<"Descrierea produsului:"<<endl<<descriere<<endl;
         cout<<"Diagnostic: "<<diagnostic<<endl;
-        cout<<"Perioada recomandata a tratamentului: "<<inceput_tratament<<" - "<<sfarsit_tratament<<endl;
+        cout<<"Perioada recomandata a tratamentului: ";
+        inceput_tratament.afisare();
+        cout<<" - ";
+        sfarsit_tratament.afisare();
+        cout<<endl;
         cout<<"Tara de provenienta a produsului este "<<tara_provenienta<<endl;
         cout<<"Reducerea valabila pentru acest produs este "<<reducere<<"%"<<endl;
     }
-    friend ostream & operator << (ostream &out, Medicament &prd);
+    friend ostream & operator << (ostream &out,const Medicament &prd);
 };
-    ostream & operator << (ostream &out, Medicament &prd)
+///question
+/*
+    ostream & operator << (ostream &out,const Medicament &prd)
     {
         out<<"Fisa produsului \""<<prd.nume<<"\""<<endl;
         out<<"Pretul produsului: "<<prd.pret<<" RON"<<endl;
@@ -1302,6 +1224,24 @@ public:
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
     }
+*/
+    ostream & operator << (ostream &out,const Medicament &prd)
+    {
+        out<<"Fisa produsului \""<<prd.nume<<"\""<<endl;
+        out<<"Pretul produsului: "<<prd.pret<<" RON"<<endl;
+        out<<"Codul articolului: "<<prd.get_cod_articol()<<endl;
+        out<<"Numarul de bucati aflate in stoc: "<<prd.nr_bucati_stoc<<endl;
+        out<<"Descrierea produsului:"<<endl<<prd.descriere<<endl;
+        out<<"Diagnostic: "<<prd.diagnostic<<endl;
+        out<<"Perioada recomandata a tratamentului: ";
+        prd.inceput_tratament.afisare();
+        out<<" - ";
+        prd.sfarsit_tratament.afisare();
+        out<<endl;
+        out<<"Tara de provenienta a produsului este "<<prd.tara_provenienta<<endl;
+        out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
+        return out;
+    }
 class Hrana_medicala: public Hrana, public Medicament
 {
 public:
@@ -1309,19 +1249,19 @@ public:
     {
         diagnostic="placebo";
     }
-    Hrana_medicala(String n, double p, int s, string c, String t, String d, double r,string diagnostic,
+    Hrana_medicala(string n, double p, int s, string c, string t, string d, double r,string diagnostic,
                Data inceput_tratament,Data sfarsit_tratament,int cant,string comp,Data d_exp):Hrana(n,p,s,c,t,d,r,cant,comp,d_exp),Medicament(n,p,s,c,t,d,r,diagnostic,inceput_tratament,sfarsit_tratament)
     {}
     ~Hrana_medicala()=default;
-    string categorie_produs()
+    string categorie_produs()const
     {
         return "Hrana cu scop medicinal.";
     }
-    string tip_asistenta()
+    string tip_asistenta()const
     {
         return "In magazine va stau la medici veterinari in sectiunea specifica.";
     }
-    bool verificare_valabilitate(Data d)
+    bool verificare_valabilitate(const Data d)const
     {
         if(data_expirare.get_an()>d.get_an())
             return true;
@@ -1331,7 +1271,7 @@ public:
                     return true;
         return false;
     }
-    double average_pret(Vector_diverse<Produs*> *v)
+    double average_pret(const Vector_diverse<shared_ptr<Produs>> *v)const
     {
         int nr_hrana=0;
         int i;
@@ -1344,7 +1284,7 @@ public:
         avg=suma/nr_hrana;
         return avg;
     }
-    void afisare()
+    void afisare()const
     {
         cout<<"Fisa produsului \""<<nume<<"\""<<endl;
         cout<<"Pretul produsului: "<<pret<<" RON"<<endl;
@@ -1353,15 +1293,21 @@ public:
         cout<<"Descrierea produsului:"<<endl<<descriere<<endl;
         cout<<"Cantitatea in grame a produsului: "<<cantitate_grame<<endl;
         cout<<"Compozitie: "<<compozitie<<endl;
-        cout<<"Data de expirare a produsului: "<<data_expirare<<endl;
+        cout<<"Data de expirare a produsului: ";
+        data_expirare.afisare();
+        cout<<endl;
         cout<<"Diagnostic: "<<diagnostic<<endl;
-        cout<<"Perioada recomandata a tratamentului: "<<inceput_tratament<<" - "<<sfarsit_tratament<<endl;
+        cout<<"Perioada recomandata a tratamentului: ";
+        inceput_tratament.afisare();
+        cout<<" - ";
+        sfarsit_tratament.afisare();
+        cout<<endl;
         cout<<"Tara de provenienta a produsului este "<<tara_provenienta<<endl;
         cout<<"Reducerea valabila pentru acest produs este "<<reducere<<"%"<<endl;
     }
-    friend ostream & operator << (ostream &out, Hrana_medicala &prd);
+    friend ostream & operator << (ostream &out,const Hrana_medicala &prd);
 };
-    ostream & operator << (ostream &out, Hrana_medicala &prd)
+    ostream & operator << (ostream &out,const Hrana_medicala &prd)
     {
         out<<"Fisa produsului \""<<prd.nume<<"\""<<endl;
         out<<"Pretul produsului: "<<prd.pret<<" RON"<<endl;
@@ -1370,9 +1316,15 @@ public:
         out<<"Descrierea produsului:"<<endl<<prd.descriere<<endl;
         out<<"Cantitatea in grame a produsului: "<<prd.cantitate_grame<<endl;
         out<<"Compozitie: "<<prd.compozitie<<endl;
-        out<<"Data de expirare a produsului: "<<prd.data_expirare<<endl;
+        out<<"Data de expirare a produsului: ";
+        prd.data_expirare.afisare();
+        out<<endl;
         out<<"Diagnostic: "<<prd.diagnostic<<endl;
-        out<<"Perioada recomandata a tratamentului: "<<prd.inceput_tratament<<" - "<<prd.sfarsit_tratament<<endl;
+        out<<"Perioada recomandata a tratamentului: ";
+        prd.inceput_tratament.afisare();
+        out<<" - ";
+        prd.sfarsit_tratament.afisare();
+        out<<endl;
         out<<"Tara de provenienta a produsului este "<<prd.tara_provenienta<<endl;
         out<<"Reducerea valabila pentru acest produs este "<<prd.reducere<<"%"<<endl;
         return out;
@@ -1381,9 +1333,8 @@ public:
 void testare2();
 void testare3();
 void testare_lambda();
-void testare_mostenire_diamant();
 
-void sort_produse_din_vector(Vector_diverse<Produs*> *vect, function<bool(Produs*,Produs*)> lambda) {
+void sort_produse_din_vector(Vector_diverse<Produs*> *const vect, function<bool(Produs*,Produs*)> lambda) {
     int n = vect->size();
     for (int i = 0; i < n-1; i++) {
         bool swapped = false;
@@ -1401,35 +1352,31 @@ void sort_produse_din_vector(Vector_diverse<Produs*> *vect, function<bool(Produs
 }
 int main()
 {
-    testare3();
-    //testare2();
-    testare_lambda();
-    //testare_mostenire_diamant();
+    //testare3();
+    testare2();
+    //testare_lambda();
     return 0;
 }
 void testare3()
 {
     afisare_vector(1);
 }
-void testare_mostenire_diamant()
-{
-    Hrana_medicala h1;
-    cout<<h1;
-}
 void testare_lambda()
 {
-    Data d1(5,12,2025),d_curenta(2,5,2023);
-    Produs *p1=new Hrana();
-    Produs *p2=new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1);
-    Produs *p3=new Decoratiuni();
-    Vector_diverse<Produs*> *p=new Vector_diverse<Produs*>;
+    ///SMART POINTERS || SHARED_PTR
+    Data d1(5,12,2025);
+    shared_ptr<Produs>p1=shared_ptr<Hrana>(new Hrana());
+    shared_ptr<Produs>p2=shared_ptr<Hrana>(new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1));
+    shared_ptr<Produs>p3=shared_ptr<Decoratiuni>(new Decoratiuni());
+    p3->schimbare_cod_articol("#439937");
+    Vector_diverse<shared_ptr<Produs>> *p=new Vector_diverse<shared_ptr<Produs>>;
     p->adaugare(p1);
     p->adaugare(p2);
     p->adaugare(p3);
     afisare_vector(p);   //p->afisare();
 
     ///FUNCTIE UTILITARA2 || MIN_ELEMENT DIN <ALGORITHM>
-    auto j=min_element(p->begin(),p->end(), [](Produs* a, Produs* b) {
+    auto j=min_element(p->begin(),p->end(), [](shared_ptr<Produs> a, shared_ptr<Produs> b) {
         return a->get_pret() < b->get_pret();
     });
     cout<<"Produsul cel mai ieftin din vector:\n";
@@ -1441,21 +1388,39 @@ void testare_lambda()
     cout<<"AM UTILIZAT FUNCTIA LAMBDA"<<endl<<endl;
 
     ///FUNCTIE UTILITARA || SORT DIN <ALGORITHM>
-    sort(p->begin(),p->end(), [](Produs* a, Produs* b) {
+    sort(p->begin(),p->end(), [](shared_ptr<Produs> a, shared_ptr<Produs> b) {
         return a->get_pret() > b->get_pret();
     });
+
     /*
+    VARIANTA CU SORT IMPLEMENTAT IN FUCNTIE:
     sort_produse_din_vector(p, [](Produs* a, Produs* b) {
         return a->get_pret() > b->get_pret();
     });
     */
-    afisare_vector(p);   //p->afisare();
 
+    p->stergere(p3);
+    afisare_vector(p);   //p->afisare();
 }
+void afis_stoc(shared_ptr<Comanda> c2)
+{
+    stoc.afisare();
+}
+
 void testare2()
 {
-    Data d1(5,12,2025),d_curenta(2,5,2023);
-    Produs *p1=new Hrana(); ///UPCASTING
+    ///USING CHRONO LIBRARY
+    auto now = chrono::system_clock::now();
+    time_t current_time = chrono::system_clock::to_time_t(now);
+    tm* local_time = localtime(&current_time);
+    int day = local_time->tm_mday;
+    int month = local_time->tm_mon + 1;
+    int year = local_time->tm_year + 1900;
+    cout<<day<<" "<<month<<" "<<year<<endl;
+    Data d_curenta(day,month,year);
+
+    Data d1(5,12,2025);
+    shared_ptr<Produs>p1=shared_ptr<Hrana>(new Hrana()); ///UPCASTING
     ///POLIMORFISM
     p1->afisare();
 
@@ -1474,15 +1439,15 @@ void testare2()
     p1->afisare();
     ///BLOC TRY
     try{
-        Produs *p2=new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1);///UPCASTING
+        shared_ptr<Produs>p2=shared_ptr<Hrana>(new Hrana("Stix",17.50,15,"#388894","Turcia","recompensa pentru papagali",0,20,"diverse seminte",d1));///UPCASTING
 
         ///POLIMORFISM
         cout<<endl<<"Verificare valabilitate:\n"<<p2->verificare_valabilitate(d_curenta)<<endl<<endl;
-        Produs *p3=new Decoratiuni();///UPCASTING
+        shared_ptr<Produs>p3=shared_ptr<Decoratiuni>(new Decoratiuni());///UPCASTING
         cout<<"Decoratiune: "<<endl;
         cout<<*p3;
         cout<<endl<<"     Vectorul de produse"<<endl<<endl;
-        Vector_diverse<Produs*> *p=new Vector_diverse<Produs*>;
+        Vector_diverse<shared_ptr<Produs>> *p=new Vector_diverse<shared_ptr<Produs>>;
         p->adaugare(p1);
         p->adaugare(p2);///UPCASTING
         p->adaugare(p3);
@@ -1497,8 +1462,8 @@ void testare2()
                 nr_hrana++;
             else {
                 ///DYNAMIC_CAST
-                Decoratiuni* tmp=dynamic_cast<Decoratiuni*>((*p)[i]);
-                if(tmp){
+                shared_ptr<Produs> bazaPtr = make_shared<Decoratiuni>();
+                if(auto derivataPtr = dynamic_pointer_cast<Decoratiuni>(bazaPtr)){
                     nr_decoratiuni++;
                 }
             }
@@ -1509,14 +1474,20 @@ void testare2()
         cout<<"PRET:"<<p2->average_pret(p)<<endl;
 
         //TESTARE ERORI
-        Hrana p5;
+
+        shared_ptr<Produs> p5 = shared_ptr<Hrana>(new Hrana());
+
+        //p5.schimbare_cod_articol("#672483");
         try{
-            p->stergere(&p5);
+            shared_ptr<Produs> pointer_p5 = shared_ptr<Produs>(p5);
+            p->stergere(pointer_p5);
         }
         catch(Bad_delete e1){
             cerr<<"EROARE: "<<e1.what()<<endl;
         }
         cout<<endl<<"Testare clasa Cos_cumparaturi"<<endl;
+
+        ///
         Cos_cumparaturi cos(*p);
         cout<<cos;
     ///TRATARE
@@ -1533,5 +1504,14 @@ void testare2()
     Client g=Client::create_guest("guest14",d_curenta);
     cout<<g;
     cout<<"Nr clienti: "<<Client::get_nr_clienti();
-
+    shared_ptr<Comanda> c1=shared_ptr<Comanda>(new Comanda(g,"#824713757","in procesare","",d_curenta,0,0));
+    shared_ptr<Comanda> c2=shared_ptr<Comanda>(new Comanda());
+    cout<<endl<<endl<<"Afisare stoc:"<<endl;
+    stoc.afisare();
+    /*
+    cout<<endl<<"Afisul din functie:"<<endl;
+    afis_stoc(c2);
+    cout<<endl<<"Afisul 2 main:"<<endl;
+    stoc.afisare();
+    */
 }
