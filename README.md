@@ -1,12 +1,15 @@
-# Proiect - POO
-(needs to be updated with all that has been done for the second deadline)
+# Object Oriented Programming project:
+
+## [🇷🇴] Proiect - POO 
+
 ## Numele proiectului:
   Aplicatie Petshop 
-  
-## Tema aleasa:
+
+## Cerințe etapa 1:
+### Tema aleasa:
   Gestionarea unui Petshop
 
-## Clasele din proiect:
+### Clasele din proiect:
 
 #### Clasa Data 
 - retine o data calendaristica de tipul dd/mm/year;
